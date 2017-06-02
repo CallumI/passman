@@ -161,6 +161,8 @@ def display_set(title):
                 newPass2 = getpass.getpass()
             if newPass1 != "":
                 print(" Set password")
+                updated = True
+                data[attribute] = newPass1
         elif attribute != "Title":
             val = "-" if attribute not in data else data[attribute]
             newVal = input("Update {} from {}:".format(attribute, val))
