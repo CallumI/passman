@@ -15,8 +15,8 @@ from os.path import isfile
 from shutil import copyfile
 import time
 
-
-STORED_FILE_NAME = "store.enc"
+STORED_FILE_NAME = "store"
+STORED_FILE_PATH = "/home/callum/passwords/{}.enc".format(STORED_FILE_NAME)
 
 
 COMMANDS = {
@@ -55,10 +55,10 @@ def readToDict(encryption_password):
     }
 
     Stores the dict of passwords in the global stored_passwords."""
-    if not isfile(STORED_FILE_NAME):
+    if not isfile(STORED_FILE_PATH):
         passwords = {}  # If there is no file then return empty list
     else:
-        raw = utils.decryptFromFile(STORED_FILE_NAME, encryption_password
+        raw = utils.decryptFromFile(STORED_FILE_PATH, encryption_password
                                     ).decode()
         passwords = json.loads(raw)
     global stored_passwords
@@ -72,9 +72,9 @@ def writeDictToFile():
     global originalFileBeforeChange
     if originalFileBeforeChange is None:
         originalFileBeforeChange = backupFile
-    if isfile(STORED_FILE_NAME):
-        copyfile(STORED_FILE_NAME, backupFile)
-    utils.encryptToFile(STORED_FILE_NAME, json.dumps(stored_passwords),
+    if isfile(STORED_FILE_PATH):
+        copyfile(STORED_FILE_PATH, backupFile)
+    utils.encryptToFile(STORED_FILE_PATH, json.dumps(stored_passwords),
                         encryption_password)
 
 
@@ -108,9 +108,6 @@ def fmtAttribute(attr):
 def fmtCommand(cmd):
     "Right pads command by the largest command."
     return ("{:" + str(MAX_COMMAND_LENGTH) + "}").format(cmd)
-
-
-
 
 
 def display_list():
@@ -184,7 +181,7 @@ def undo():
     if originalFileBeforeChange is None:
         print("Nothing to undo")
     else:
-        copyfile(originalFileBeforeChange, STORED_FILE_NAME)
+        copyfile(originalFileBeforeChange, STORED_FILE_PATH)
         readToDict(encryption_password)
         print("Reset to before any changes this log in.")
 
