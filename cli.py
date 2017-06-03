@@ -20,12 +20,13 @@ STORED_FILE_PATH = "/home/callum/passwords/{}.enc".format(STORED_FILE_NAME)
 
 
 COMMANDS = {
-    "list": "Lists the titles of all saved entries.",
-    "help": "Displays a list of commands and attributes",
-    "show <title>": "Shows info about a given title.",
-    "set <title>": "Prompts setting a given title.",
-    "undo": "Resets any changes made this log in.",
-    "exit": "Quits the program."
+    "list": "List the titles of all saved entries.",
+    "help": "Display a list of commands.",
+    "show <title>": "Shows values of title.",
+    "set <title>": "Prompt for setting values of title.",
+    "undo": "Reset any changes made this log in.",
+    "exit": "Quit the program.",
+    "remove <title>": "Remove a given title."
 }
 MAX_COMMAND_LENGTH = max(len(key) for key in COMMANDS)
 
@@ -99,6 +100,8 @@ def executeCommand(cmd):
                 global running
                 running = False
                 return
+            if directive == "remove":
+                return display_remove(arg)
     print("Unrecognised Command, try 'help'.")
 
 
@@ -133,6 +136,8 @@ def display_show(title):
     if title in stored_passwords:
         data = stored_passwords[title]
         for attribute in ATTRIBUTES:
+            if attribute == "Title":
+                continue
             val = ("-" if attribute not in data
                    else "********" if attribute == "Password"
                    else data[attribute])
@@ -180,9 +185,9 @@ def display_set(title):
                                                 val, newVal))
                 data[attribute] = newVal
     if updated:
-        print("Saving changed file")
         stored_passwords[title] = data
         writeDictToFile()
+        print("Updated")
     else:
         print("Not updated, not saving.")
 
@@ -195,6 +200,20 @@ def undo():
         copyfile(originalFileBeforeChange, STORED_FILE_PATH)
         readToDict(encryption_password)
         print("Reset to before any changes this log in.")
+
+
+def display_remove(title):
+    "Removes title from the stored passwords"
+    if title is None:
+        print("Nothing to remove.")
+    try:
+        del stored_passwords[title]
+    except KeyError:
+        print("Title not in stored.")
+    else:
+        writeDictToFile()
+        print("Removed")
+
 
 
 if __name__ == "__main__":
