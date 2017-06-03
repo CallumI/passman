@@ -100,7 +100,6 @@ def executeCommand(cmd):
                 running = False
                 return
     print("Unrecognised Command, try 'help'.")
-    print(directive, arg)
 
 
 def fmtAttribute(attr):
