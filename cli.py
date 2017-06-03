@@ -40,8 +40,9 @@ ATTRIBUTES = {
 
 MAX_ATTRIBUTE_LENGTH = max(len(key) for key in ATTRIBUTES)
 
-
-originalFileBeforeChange = None
+# Volatile globals
+originalFileBeforeChange = None  # The first backup in this run
+stored_passwords = None          # The dictionary of password instances
 
 
 def readToDict(encryption_password):
@@ -199,8 +200,12 @@ def undo():
 
 if __name__ == "__main__":
     print(__doc__)
-    encryption_password = getpass.getpass()
-    readToDict(encryption_password)
+    while stored_passwords is None:
+        encryption_password = getpass.getpass()
+        try:
+            readToDict(encryption_password)
+        except utils.VerificationError:
+            print("Wrong password. Try again.")
     running = True
     while running:
         executeCommand(input(">"))

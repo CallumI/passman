@@ -21,6 +21,11 @@ def setupCipher(password, salt, iv):
     return AES.new(key, AES.MODE_CCM, iv)
 
 
+class VerificationError(ValueError):
+    "Error raised when the MAC verification fails. AKA password wrong."
+    pass
+
+
 def encryptToFile(fileName, plaintext, password):
     """Encrypts some plaintext string with a key derived from a given password
     and writes it to a file in the standard format.
@@ -63,5 +68,8 @@ def decryptFromFile(fileName, password):
         ciphertext = fHandle.read()
     cipher = setupCipher(password, salt, iv)
     plaintext = cipher.decrypt(ciphertext)
-    cipher.verify(mac)
+    try:
+        cipher.verify(mac)
+    except ValueError:
+        raise VerificationError
     return plaintext
