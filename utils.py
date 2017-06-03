@@ -8,8 +8,8 @@ assert pythonVersion >= (3,)
 
 SALT_LENGTH = 8   # Recommmended 8 bytes
 KEY_LENGTH = 32   # Must be 32 bytes for AES-256
-IV_LENGTH = 12    # Must be 16 bytes for CBC
-MAC_LENGTH = 16
+IV_LENGTH = 13    # Must be 7..13 bytes for CCM
+MAC_LENGTH = 16   # Set by AES mode
 
 
 def setupCipher(password, salt, iv):
@@ -38,7 +38,6 @@ def encryptToFile(fileName, plaintext, password):
     # Initialise the random values
     salt = Random.get_random_bytes(SALT_LENGTH)
     iv = Random.get_random_bytes(IV_LENGTH)
-
     # Setup the cipher with a derived key and a random iv.
     cipher = setupCipher(password, salt, iv)
     # Encrypt the plaintext and generate the mac
