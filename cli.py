@@ -80,7 +80,8 @@ def writeDictToFile():
 
 def executeCommand(cmd):
     """Runs the command specified in the input string cmd."""
-    directive = cmd.split(" ")[0]
+    directive, arg = ((cmd, None) if " " not in cmd
+                      else tuple(cmd.split(" ", 1)))
     for key in COMMANDS:
         if key.startswith(directive):
             if directive == "list":
@@ -88,9 +89,9 @@ def executeCommand(cmd):
             if directive == "help":
                 return display_help()
             if directive == "show":
-                return display_show(cmd.split(" ")[1])
+                return display_show(arg)
             if directive == "set":
-                return display_set(cmd.split(" ")[1])
+                return display_set(arg)
             if directive == "undo":
                 return undo()
             if directive == "exit":
@@ -98,6 +99,7 @@ def executeCommand(cmd):
                 running = False
                 return
     print("Unrecognised Command, try 'help'.")
+    print(directive, arg)
 
 
 def fmtAttribute(attr):
@@ -125,6 +127,9 @@ def display_help():
 
 def display_show(title):
     "Shows info about a given title"
+    if title is None:
+        print("Nothing given to show")
+        return
     if title in stored_passwords:
         data = stored_passwords[title]
         for attribute in ATTRIBUTES:
@@ -138,6 +143,9 @@ def display_show(title):
 
 def display_set(title):
     "Sets data for a given title"
+    if title is None:
+        print("Nothing given to set")
+        return
     updated = False
     if title in stored_passwords:
         data = stored_passwords[title]
@@ -180,6 +188,7 @@ def display_set(title):
 
 
 def undo():
+    "Restores store file to first backup made this time it was opened."
     if originalFileBeforeChange is None:
         print("Nothing to undo")
     else:
