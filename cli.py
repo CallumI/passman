@@ -238,12 +238,16 @@ def display_copy(args):
 
 if __name__ == "__main__":
     print(__doc__)
-    while stored_passwords is None:
-        encryption_password = getpass.getpass()
-        try:
-            readToDict(encryption_password)
-        except utils.VerificationError:
-            print("Wrong password. Try again.")
-    running = True
-    while running:
-        executeCommand(input("> "))
+    try:
+        while stored_passwords is None:
+            encryption_password = getpass.getpass()
+            try:
+                readToDict(encryption_password)
+            except utils.VerificationError:
+                print("Wrong password. Try again.")
+        running = True
+        while running:
+            executeCommand(input("> "))
+    except (KeyboardInterrupt, EOFError):
+        print()  # Incase in password input...
+        print("Exit...")
