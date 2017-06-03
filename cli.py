@@ -14,6 +14,7 @@ import json
 from os.path import isfile
 from shutil import copyfile
 import time
+import pyperclip
 
 STORED_FILE_NAME = "store"
 STORED_FILE_PATH = "/home/callum/passwords/{}.enc".format(STORED_FILE_NAME)
@@ -26,7 +27,8 @@ COMMANDS = {
     "set <title>": "Prompt for setting values of title.",
     "undo": "Reset any changes made this log in.",
     "exit": "Quit the program.",
-    "remove <title>": "Remove a given title."
+    "remove <title>": "Remove a given title.",
+    "copy <title> [<attribute>]": "Copy (default: Password) to clipboard."
 }
 MAX_COMMAND_LENGTH = max(len(key) for key in COMMANDS)
 
@@ -102,6 +104,8 @@ def executeCommand(cmd):
                 return
             if directive == "remove":
                 return display_remove(arg)
+            if directive == "copy":
+                return display_copy(arg)
     print("Unrecognised Command, try 'help'.")
 
 
@@ -151,6 +155,8 @@ def display_set(title):
     if title is None:
         print("Nothing given to set")
         return
+    if " " in title:
+        print("Title can't have space in!")
     updated = False
     if title in stored_passwords:
         data = stored_passwords[title]
@@ -214,6 +220,20 @@ def display_remove(title):
         writeDictToFile()
         print("Removed")
 
+
+def display_copy(args):
+    """Takes a string '<title> [attribute]' and copies title's attribute
+    value to the clipboard. If no attribute is given then 'Password' is
+    the default"""
+    args = args.split(" ", 1)
+    if len(args) == 1:
+        args.append("Password")
+    title, attribute = tuple(args)
+    try:
+        pyperclip.copy(stored_passwords[title][attribute])
+    except KeyError:
+        print("Title isn't stored or doesn't have that attribute.")
+    print("Copied {} of {} to clipboard.".format(attribute, title))
 
 
 if __name__ == "__main__":
