@@ -22,8 +22,8 @@ STORED_FILE_PATH = "/home/callum/passwords/{}.enc".format(STORED_FILE_NAME)
 COMMANDS = {
     "list": "Lists the titles of all saved entries.",
     "help": "Displays a list of commands and attributes",
-    "show <Title>": "Shows info about a given title.",
-    "set <Title>": "Prompts setting a given title.",
+    "show <title>": "Shows info about a given title.",
+    "set <title>": "Prompts setting a given title.",
     "undo": "Resets any changes made this log in.",
     "exit": "Quits the program."
 }
@@ -208,4 +208,4 @@ if __name__ == "__main__":
             print("Wrong password. Try again.")
     running = True
     while running:
-        executeCommand(input(">"))
+        executeCommand(input("> "))
