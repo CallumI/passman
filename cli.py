@@ -11,13 +11,14 @@ Usage:
 import getpass
 import utils
 import json
-from os.path import isfile
+from os.path import isfile, dirname, realpath, join
 from shutil import copyfile
 import time
 import pyperclip
 
 STORED_FILE_NAME = "store"
-STORED_FILE_PATH = "/home/callum/passwords/{}.enc".format(STORED_FILE_NAME)
+SCRIPT_DIRECTORY = dirname(realpath(__file__))
+STORED_FILE_PATH = join(SCRIPT_DIRECTORY, "{}.enc".format(STORED_FILE_NAME))
 
 
 COMMANDS = {
