@@ -244,7 +244,9 @@ def display_copy(args):
         pyperclip.copy(stored_passwords[title][attribute])
     except KeyError:
         print("Title isn't stored or doesn't have that attribute.")
-    print("Copied {} of {} to clipboard.".format(attribute, title))
+    else:
+        # If there is no error, it is copied...
+        print("Copied {} of {} to clipboard.".format(attribute, title))
 
 
 if __name__ == "__main__":
