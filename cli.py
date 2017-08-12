@@ -1,5 +1,13 @@
 #! /usr/bin/env python3
-"""Very simple password storing application.
+"""
+_____
+|  __ \\
+| |__) |_ _ ___ ___ _ __ ___   __ _ _ __
+|  ___/ _` / __/ __| '_ ` _ \ / _` | '_ \\
+| |  | (_| \__ \__ \ | | | | | (_| | | | |
+|_|   \__,_|___/___/_| |_| |_|\__,_|_| |_|
+
+Very simple password storing application.
 
 Usage:
     python3 cli.py
@@ -15,6 +23,8 @@ from os.path import isfile, dirname, realpath, join
 from shutil import copyfile
 import time
 import pyperclip
+from subprocess import check_output
+import os
 
 STORED_FILE_NAME = "store"
 SCRIPT_DIRECTORY = dirname(realpath(__file__))
@@ -238,6 +248,10 @@ def display_copy(args):
 
 
 if __name__ == "__main__":
+    # Print git status to check not in development
+    print(check_output(["git", "--git-dir",
+                        os.path.join(SCRIPT_DIRECTORY, ".git"),
+                        "status"]).decode())
     print(__doc__)
     try:
         while stored_passwords is None:
