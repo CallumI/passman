@@ -8,12 +8,6 @@ _____
 |_|   \__,_|___/___/_| |_| |_|\__,_|_| |_|
 
 Very simple password storing application.
-
-Usage:
-    python3 cli.py
-    password: <enter password>
-    <cmd>
-    <response>
 """
 
 import getpass
