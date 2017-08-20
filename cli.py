@@ -247,6 +247,7 @@ if __name__ == "__main__":
     # Print git status to check not in development
     print(check_output(["git", "--git-dir",
                         os.path.join(SCRIPT_DIRECTORY, ".git"),
+                        "--work-tree", SCRIPT_DIRECTORY,
                         "status"]).decode())
     print(__doc__)
     try:
