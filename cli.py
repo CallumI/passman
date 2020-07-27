@@ -11,18 +11,18 @@ Very simple password storing application.
 """
 
 import getpass
+from pathlib import Path
+
 import utils
 import json
 from os.path import isfile, dirname, realpath, join
 from shutil import copyfile
 import time
 import pyperclip
-from subprocess import check_output
-import os
+import sys
+import git
 
 STORED_FILE_NAME = "store"
-SCRIPT_DIRECTORY = dirname(realpath(__file__))
-STORED_FILE_PATH = join(SCRIPT_DIRECTORY, "{}.enc".format(STORED_FILE_NAME))
 
 
 COMMANDS = {
@@ -49,11 +49,11 @@ ATTRIBUTES = {
 MAX_ATTRIBUTE_LENGTH = max(len(key) for key in ATTRIBUTES)
 
 # Volatile globals
-originalFileBeforeChange = None  # The first backup in this run
 stored_passwords = None          # The dictionary of password instances
+running = False
 
 
-def readToDict(encryption_password):
+def readToDict(encryption_password, stored_file_path):
     """Reads the encrypted file and parses the json into a dict of
     dicts containing attributes about each entry.
 
@@ -64,30 +64,45 @@ def readToDict(encryption_password):
     }
 
     Stores the dict of passwords in the global stored_passwords."""
-    if not isfile(STORED_FILE_PATH):
+    if not isfile(stored_file_path):
         passwords = {}  # If there is no file then return empty list
     else:
-        raw = utils.decryptFromFile(STORED_FILE_PATH, encryption_password
+        raw = utils.decryptFromFile(stored_file_path, encryption_password
                                     ).decode()
         passwords = json.loads(raw)
     global stored_passwords
     stored_passwords = passwords
 
 
-def writeDictToFile():
-    """Takes a list of dictionaries as in readToList(), strigifies it with
+def backup_to_git(stored_file_path):
+    repo_dir = str(Path(stored_file_path).parent)
+    g = git.cmd.Git(repo_dir)
+    g.add(stored_file_path)
+    g.commit('-m', 'update')
+    g.push()
+
+
+def writeDictToFile(encryption_password, stored_file_path):
+    """Takes a list of dictionaries as in readToList(), stringifies it with
     JSON and then writes to an encrypted file."""
     backupFile = time.strftime(".backup-%Y%m%d-%H%M%S.enc")
-    global originalFileBeforeChange
-    if originalFileBeforeChange is None:
-        originalFileBeforeChange = backupFile
-    if isfile(STORED_FILE_PATH):
-        copyfile(STORED_FILE_PATH, backupFile)
-    utils.encryptToFile(STORED_FILE_PATH, json.dumps(stored_passwords),
+    if isfile(stored_file_path):
+        # Backup if already exists
+        copyfile(stored_file_path, backupFile)
+
+    utils.encryptToFile(stored_file_path, json.dumps(stored_passwords),
                         encryption_password)
+    print(f'Written to file {stored_file_path}')
+    try:
+        backup_to_git(stored_file_path)
+    except Exception as e:
+        print('Failed to backup but file is consistent. Try again later.')
+        raise e
+    else:
+        print('Backed up to GitHub')
 
 
-def executeCommand(cmd):
+def executeCommand(cmd, encryption_password, stored_file_path):
     """Runs the command specified in the input string cmd."""
     directive, arg = ((cmd, None) if " " not in cmd
                       else tuple(cmd.split(" ", 1)))
@@ -100,15 +115,13 @@ def executeCommand(cmd):
             if directive == "show":
                 return display_show(arg)
             if directive == "set":
-                return display_set(arg)
-            if directive == "undo":
-                return undo()
+                return display_set(arg, encryption_password, stored_file_path)
             if directive == "exit":
                 global running
                 running = False
                 return
             if directive == "remove":
-                return display_remove(arg)
+                return display_remove(arg, encryption_password, stored_file_path)
             if directive == "copy":
                 return display_copy(arg)
     print("Unrecognised Command, try 'help'.")
@@ -155,7 +168,7 @@ def display_show(title):
         print("Title not found in stored passwords.")
 
 
-def display_set(title):
+def display_set(title, encryption_password, stored_file_path):
     "Sets data for a given title"
     if title is None:
         print("Nothing given to set")
@@ -197,23 +210,13 @@ def display_set(title):
                 data[attribute] = newVal
     if updated:
         stored_passwords[title] = data
-        writeDictToFile()
+        writeDictToFile(encryption_password, stored_file_path)
         print("Updated")
     else:
         print("Not updated, not saving.")
 
 
-def undo():
-    "Restores store file to first backup made this time it was opened."
-    if originalFileBeforeChange is None:
-        print("Nothing to undo")
-    else:
-        copyfile(originalFileBeforeChange, STORED_FILE_PATH)
-        readToDict(encryption_password)
-        print("Reset to before any changes this log in.")
-
-
-def display_remove(title):
+def display_remove(title, encryption_password, stored_file_path):
     "Removes title from the stored passwords"
     if title is None:
         print("Nothing to remove.")
@@ -222,7 +225,7 @@ def display_remove(title):
     except KeyError:
         print("Title not in stored.")
     else:
-        writeDictToFile()
+        writeDictToFile(encryption_password, stored_file_path)
         print("Removed")
 
 
@@ -243,23 +246,29 @@ def display_copy(args):
         print("Copied {} of {} to clipboard.".format(attribute, title))
 
 
-if __name__ == "__main__":
-    # Print git status to check not in development
-    print(check_output(["git", "--git-dir",
-                        os.path.join(SCRIPT_DIRECTORY, ".git"),
-                        "--work-tree", SCRIPT_DIRECTORY,
-                        "status"]).decode())
-    print(__doc__)
+def run(stored_file_path):
     try:
         while stored_passwords is None:
             encryption_password = getpass.getpass()
             try:
-                readToDict(encryption_password)
+                readToDict(encryption_password, stored_file_path)
             except utils.VerificationError:
                 print("Wrong password. Try again.")
         running = True
         while running:
-            executeCommand(input("> "))
+            executeCommand(input("> "), encryption_password, stored_file_path)
     except (KeyboardInterrupt, EOFError):
-        print()  # Incase in password input...
+        print()  # In case in password input...
         print("Exit...")
+
+
+if __name__ == "__main__":
+    print(__doc__)
+
+    if len(sys.argv) == 2:
+        base_dir = Path(sys.argv[1])
+        assert base_dir.exists()
+        run(str(base_dir / f"{STORED_FILE_NAME}.enc"))
+    else:
+        print("Supply stored directory")
+
