@@ -1,4 +1,4 @@
-py==1.4.34
+py==1.10.0
 pycryptodomex==3.4.6
 pyperclip==1.5.27
 pytest==3.1.2
